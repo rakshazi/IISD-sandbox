@@ -3,8 +3,8 @@ gid := `id -g`
 home := `echo $HOME`
 agent := "omp"
 
-build:
-	docker build -t {{ agent }} .
+build *args:
+	docker build -t {{ agent }} {{ args }} .
 
 # run agent in docker sandbox
 [no-cd]
@@ -14,7 +14,7 @@ run *args:
 	# explicit update
 	if [[ "{{ args }}" == "update" ]]; then
 		echo "[{{ agent }} sandbox] updating..."
-		{{ just_executable() }} -f {{ justfile() }} build
+		{{ just_executable() }} -f {{ justfile() }} build --pull --no-cache
 		echo "[{{ agent }} sandbox] ready to run"
 		# re-run without args
 		{{ just_executable() }} -f {{ justfile() }} run

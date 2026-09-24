@@ -29,6 +29,10 @@ run *args:
 		{{ just_executable() }} -f {{ justfile() }} run {{ args }}
 	fi
 
+	# avoid missing sessions between symlink vs real path working dir
+	export CWD=$(realpath -L $PWD)
+	export WSD=${CWD//\//-}
+
 	# WARNING1: --network=host is required for local models only. REPLACE with `--network=none`
 	# WARNING2: /tmp must be with exec permissions for just/go/etc. to work
 	docker run -it --rm \
@@ -38,20 +42,23 @@ run *args:
 	--tmpfs=/home/agent/.ansible:rw,noexec,nosuid,nodev,uid={{ uid }},gid={{ gid }},size=2g \
 	--tmpfs=/home/agent/.cache:rw,noexec,nosuid,nodev,uid={{ uid }},gid={{ gid }},size=2g \
 	--tmpfs=/home/agent/.config:rw,noexec,nosuid,nodev,uid={{ uid }},gid={{ gid }},size=100m \
+	--tmpfs=/home/agent/.local/state:rw,noexec,nosuid,nodev,uid={{ uid }},gid={{ gid }},size=100m \
+	--tmpfs=/home/agent/.yarn:rw,noexec,nosuid,nodev,uid={{ uid }},gid={{ gid }},size=2g \
+	--tmpfs=/home/agent/.cargo:rw,noexec,nosuid,nodev,uid={{ uid }},gid={{ gid }},size=2g \
 	--tmpfs=/home/agent/go:rw,exec,nosuid,nodev,uid={{ uid }},gid={{ gid }},size=2g \
 	--ipc=private \
 	--read-only \
 	--security-opt=no-new-privileges:true \
 	--cap-drop=ALL \
 	--network=host \
-	--memory=4g \
-	--memory-swap=4g \
-	--cpus=4 \
-	--pids-limit=512 \
+	--memory=8g \
+	--memory-swap=8g \
+	--cpus=8 \
+	--pids-limit=1024 \
 	--user={{ uid }}:{{ gid }} \
 	--mount type=bind,src={{ home }}/.{{ agent }},dst=/home/agent/.{{ agent }} \
-	--mount type=bind,src=$PWD,dst=/home/agent/workspace/${PWD//\//-} \
-	--workdir /home/agent/workspace/${PWD//\//-} \
+	--mount type=bind,src=$CWD,dst=/home/agent/workspace/$WSD \
+	--workdir /home/agent/workspace/$WSD \
 	--health-cmd="ps aux | grep -q {{ agent }} || exit 1" \
 	--health-interval=30s \
 	{{ agent }} {{ agent }} {{ args }}

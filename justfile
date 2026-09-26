@@ -44,7 +44,8 @@ run *args:
 	--tmpfs=/home/agent/.config:rw,noexec,nosuid,nodev,uid={{ uid }},gid={{ gid }},size=100m \
 	--tmpfs=/home/agent/.local/state:rw,noexec,nosuid,nodev,uid={{ uid }},gid={{ gid }},size=100m \
 	--tmpfs=/home/agent/.yarn:rw,noexec,nosuid,nodev,uid={{ uid }},gid={{ gid }},size=2g \
-	--tmpfs=/home/agent/.cargo:rw,noexec,nosuid,nodev,uid={{ uid }},gid={{ gid }},size=2g \
+	--tmpfs=/home/agent/.rustup:rw,exec,nosuid,nodev,uid={{ uid }},gid={{ gid }},size=4g \
+	--tmpfs=/home/agent/.cargo:rw,exec,nosuid,nodev,uid={{ uid }},gid={{ gid }},size=4g \
 	--tmpfs=/home/agent/go:rw,exec,nosuid,nodev,uid={{ uid }},gid={{ gid }},size=2g \
 	--ipc=private \
 	--read-only \

@@ -1,28 +1,32 @@
 FROM fedora:latest
 
 # arbitrary system deps
-ARG DNF_DEPS_SYSTEM="unzip jq git just hugo"
+ARG DNF_DEPS_SYSTEM="unzip jq git just hugo reuse"
 # agent (omp by default) deps (like chrome deps)
 ARG DNF_DEPS_AGENT="nss nss-util nspr atk at-spi2-atk at-spi2-core cairo cups-libs dbus-libs \
 	libX11 libXcomposite libXdamage libXext libXfixes libXrandr libxcb libxkbcommon \
 		alsa-lib pango fontconfig liberation-fonts"
 # go deps
-ARG DNF_DEPS_GO="golang golangci-lint"
+ARG DNF_DEPS_GO="golang golangci-lint libolm libolm-devel"
 # ansible deps
 ARG DNF_DEPS_ANSIBLE="python3 python3-pip ansible-core ansible-lint ansible"
 # node deps
 ARG DNF_DEPS_NODE="nodejs24 yarnpkg"
-# qt6 deps (c++/rust mostly). -devel provides cmake configs + headers and pulls the runtime twin
-ARG DNF_DEPS_QT6="rust cmake ninja gcc-c++ qt6-qtbase-devel qt6-qtbase-private-devel \
+# rust deps. rustup manages toolchains: auto-downloaded on first use, honors rust-toolchain.toml
+ARG DNF_DEPS_RUST="rustup cmake ninja gcc-c++ pkgconf sqlite-devel"
+# qt6 deps. -devel provides cmake configs + headers and pulls the runtime twin
+ARG DNF_DEPS_QT6="qt6-qtbase-devel qt6-qtbase-private-devel \
 	qt6-qtdeclarative-devel qt6-qtmultimedia-devel qt6-qtsvg-devel qt6-qttools-devel \
-	libsecret-devel cargo reuse"
+	libsecret-devel"
 # all deps to install. If you don't need something, just remove it from the list
-ENV DNF_DEPS="$DNF_DEPS_SYSTEM $DNF_DEPS_AGENT $DNF_DEPS_GO $DNF_DEPS_ANSIBLE $DNF_DEPS_NODE $DNF_DEPS_QT6"
+ENV DNF_DEPS="$DNF_DEPS_SYSTEM $DNF_DEPS_AGENT $DNF_DEPS_GO $DNF_DEPS_ANSIBLE $DNF_DEPS_NODE $DNF_DEPS_RUST $DNF_DEPS_QT6"
 
 ENV HOME=/home/agent
 ENV GOPATH=$HOME/go
+ENV CARGO_HOME=$HOME/.cargo
+ENV RUSTUP_HOME=$HOME/.rustup
 ENV GOCACHE=/tmp
-ENV PATH=$GOPATH/bin:$HOME/.local/bin:$PATH
+ENV PATH=$CARGO_HOME/bin:$GOPATH/bin:$HOME/.local/bin:$PATH
 
 RUN groupadd -g 10001 agent && \
 	useradd -u 10001 -g agent -s /bin/bash -M -d $HOME agent && \

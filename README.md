@@ -3,11 +3,14 @@
 This is a tradeoff between full isolation and ability to actually work for AI agents.
 The sandbox is configured with the stack *I* need to work with, so you may want to adapt it to your needs.
 
-**NOTE**: this is not an ideal isolation, it is not intended to be. This sandbox is tailored for *my* specific use-cases,
+**NOTE**: this is not an ideal isolation. This sandbox is tailored for *my* specific use-cases,
 and I need things like executables in `/tmp` for example. Feel free to adapt it to your needs.
 
 By default sandbox is configured to run [Oh My Pi](https://omp.sh) agent.
 You can change that, see [Optional](#optional) section.
+
+Also, I wrote [You Don't Need A %Frontier LLM%](https://rakshazi.me/blog/you-dont-need-frontier-llm/) where the setup and purposes were explained.
+(Just in case you might be interested in my ranting for some reason.)
 
 <!-- vim-markdown-toc GFM -->
 
@@ -18,7 +21,7 @@ You can change that, see [Optional](#optional) section.
 * [Usage](#usage)
     * [Installation](#installation)
     * [Running](#running)
-    * [Netless (air-gapped) runs](#netless-air-gapped-runs)
+    * [Netless runs](#netless-runs)
     * [Updates, modifications, rebuilds](#updates-modifications-rebuilds)
 
 <!-- vim-markdown-toc -->
@@ -27,6 +30,11 @@ You can change that, see [Optional](#optional) section.
 
 - [docker](https://docs.docker.com/get-docker/)
 - [just](https://just.systems/manpage/)
+
+Additionally, for the ~~FelonyBench ladder~~ disabled networking runs:
+
+- [tinyproxy](https://github.com/tinyproxy/tinyproxy)
+- [socat](https://repo.or.cz/socat.git)
 
 ### Understanding the threat model
 
@@ -38,7 +46,7 @@ So, my main threat model is an agent going "oops, I accidentally nuked your syst
 
 #### Special instructions for UNCENSORED-ABLITERATED-HERETICKED-ULTRA-NEO-MAX-PRO-8K-244Hz enjoyers
 
-**DISABLE**. **DAMN**. **NETWORKING**. `--network=none` <- this is the way. [`just run netless`](#netless-air-gapped-runs) does the trick.
+**DISABLE**. **DAMN**. **NETWORKING**. `--network=none` <- this is the way. [`just run netless`](#netless-runs) does the trick.
 
 Uncensored models *can* do anything. Depending on the prompt and model quality, it probably *will* do weird things.
 Disable the networking. Don't try to claim a place in a felony bench ladder with your Qwen-Fable-ULTRA-MEGA-NEO-HACKER-HERETIC-8b. (Yes, it will be hilarious. No, it's not worth it anyway.)
@@ -72,7 +80,15 @@ now `omp` your way.
 just run
 ```
 
-### Netless (air-gapped) runs
+Disabled networking:
+
+```bash
+just run netless
+```
+
+_(Yes, I know you downloaded that ARA-SOMPOA-ABSOLUTE-HERESY finetune, the `netless` mode is for you.)_
+
+### Netless runs
 
 `--network=none` <- the thing the [threat model section](#special-instructions-for-uncensored-abliterated-hereticked-ultra-neo-max-pro-8k-244hz-enjoyers) yells about.
 Except an agent with zero holes can't think, so exactly two get punched, both on the host side and both over unix sockets.

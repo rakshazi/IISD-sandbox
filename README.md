@@ -18,6 +18,7 @@ You can change that, see [Optional](#optional) section.
 * [Usage](#usage)
     * [Installation](#installation)
     * [Running](#running)
+    * [Netless (air-gapped) runs](#netless-air-gapped-runs)
     * [Updates, modifications, rebuilds](#updates-modifications-rebuilds)
 
 <!-- vim-markdown-toc -->
@@ -37,7 +38,7 @@ So, my main threat model is an agent going "oops, I accidentally nuked your syst
 
 #### Special instructions for UNCENSORED-ABLITERATED-HERETICKED-ULTRA-NEO-MAX-PRO-8K-244Hz enjoyers
 
-**DISABLE**. **DAMN**. **NETWORKING**. `--network=none` <- this is the way.
+**DISABLE**. **DAMN**. **NETWORKING**. `--network=none` <- this is the way. [`just run netless`](#netless-air-gapped-runs) does the trick.
 
 Uncensored models *can* do anything. Depending on the prompt and model quality, it probably *will* do weird things.
 Disable the networking. Don't try to claim a place in a felony bench ladder with your Qwen-Fable-ULTRA-MEGA-NEO-HACKER-HERETIC-8b. (Yes, it will be hilarious. No, it's not worth it anyway.)
@@ -70,6 +71,35 @@ now `omp` your way.
 ```bash
 just run
 ```
+
+### Netless (air-gapped) runs
+
+`--network=none` <- the thing the [threat model section](#special-instructions-for-uncensored-abliterated-hereticked-ultra-neo-max-pro-8k-244hz-enjoyers) yells about.
+Except an agent with zero holes can't think, so exactly two get punched, both on the host side and both over unix sockets.
+That's `just run netless`, or `omp netless` with the alias.
+
+1. `api.venice.ai:443` through [tinyproxy](https://tinyproxy.github.io/) doing what a proxy should: allowlist, default deny, CONNECT to port 443 only. Inside the container it looks like a boring `HTTPS_PROXY=http://127.0.0.1:8118`. You are supposed to change it to your provider's host justfile, btw. Or keep [Venice](https://venice.ai/chat?ref=kpXDe6 "my personal ref link with $10 bonus") - this one is good (ZDR, unrestricted open-weight models, including deliberately uncensored ones).
+2. Your local model server (`127.0.0.1:8899` on the host by default) for `local/*` models. Change it as well.
+
+No egress.
+Web search, direct connections, and whatever clever exfiltration route your model was about to invent: all dead.
+Provider API endpoints stay reachable by design, because that's where your prompts go anyway, so that's the one pipe to watch.
+
+Host side wants Linux with `tinyproxy` and `socat` (`pacman -S tinyproxy socat`, `apt install tinyproxy socat`, `dnf install tinyproxy socat`). Defaults sit at the top of the `netless` recipe in the [justfile](justfile), every one of them overridable via env var:
+
+- `NETLESS_ALLOW` (default `api.venice.ai`): comma-separated hostnames allowed through the proxy, add your provider endpoints here
+- `NETLESS_LOCAL_TARGET` (default `127.0.0.1:8899`): host address of your local model server
+- `NETLESS_PROXY_PORT` / `NETLESS_LOCAL_PORT` (defaults `8118` / `8899`): loopback bridge ports inside the container
+
+<details>
+<summary>Notes</summary>
+
+- `~/.omp/docker` stays writable in netless runs, so the agent can work on the sandbox itself (`justfile` / `Dockerfile` edits apply on the next host-side run)
+- One netless session at a time: the recipe takes a lock, so a second `omp netless` gets told to come back later.
+- `netless/` is runtime state (sockets, lock, logs), gitignored, sockets are recreated per run, logs append across sessions.
+- The proxy keeps receipts in `~/.omp/docker/netless/tinyproxy.log`: session markers, allowed CONNECTs, refusals. First file to read when the agent starts mentioning something about internal documents of Austrian government.
+
+</details>
 
 ### Updates, modifications, rebuilds
 

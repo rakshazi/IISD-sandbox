@@ -1,7 +1,7 @@
 FROM fedora:latest
 
 # arbitrary system deps
-ARG DNF_DEPS_SYSTEM="unzip jq git just hugo reuse"
+ARG DNF_DEPS_SYSTEM="unzip jq git just hugo reuse socat"
 # agent (omp by default) deps (like chrome deps)
 ARG DNF_DEPS_AGENT="nss nss-util nspr atk at-spi2-atk at-spi2-core cairo cups-libs dbus-libs \
 	libX11 libXcomposite libXdamage libXext libXfixes libXrandr libxcb libxkbcommon \

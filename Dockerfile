@@ -7,13 +7,13 @@ ARG DNF_DEPS_AGENT="nss nss-util nspr atk at-spi2-atk at-spi2-core cairo cups-li
 	libX11 libXcomposite libXdamage libXext libXfixes libXrandr libxcb libxkbcommon \
 		alsa-lib pango fontconfig liberation-fonts"
 # go deps
-ARG DNF_DEPS_GO="golang golangci-lint libolm libolm-devel"
+ARG DNF_DEPS_GO="golang gopls golangci-lint libolm libolm-devel"
 # ansible deps
-ARG DNF_DEPS_ANSIBLE="python3 python3-pip ansible-core ansible-lint ansible"
+ARG DNF_DEPS_ANSIBLE="python3 python3-pip python3-lsp-server ansible-core ansible-lint ansible"
 # node deps
-ARG DNF_DEPS_NODE="nodejs24 yarnpkg"
+ARG DNF_DEPS_NODE="nodejs24 typescript yarnpkg"
 # rust deps. rustup manages toolchains: auto-downloaded on first use, honors rust-toolchain.toml
-ARG DNF_DEPS_RUST="rustup cmake ninja gcc-c++ pkgconf sqlite-devel"
+ARG DNF_DEPS_RUST="rustup clang cmake ninja gcc-c++ pkgconf sqlite-devel"
 # qt6 deps. -devel provides cmake configs + headers and pulls the runtime twin
 ARG DNF_DEPS_QT6="qt6-qtbase-devel qt6-qtbase-private-devel \
 	qt6-qtdeclarative-devel qt6-qtmultimedia-devel qt6-qtsvg-devel qt6-qttools-devel \

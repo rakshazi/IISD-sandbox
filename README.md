@@ -113,7 +113,7 @@ Host side wants Linux with `tinyproxy` and `socat` (`pacman -S tinyproxy socat`,
 - `~/.omp/docker` stays writable in netless runs, so the agent can work on the sandbox itself (`justfile` / `Dockerfile` edits apply on the next host-side run)
 - One netless session at a time: the recipe takes a lock, so a second `omp netless` gets told to come back later.
 - `netless/` is runtime state (sockets, lock, logs), gitignored, sockets are recreated per run, logs append across sessions.
-- The proxy keeps receipts in `~/.omp/docker/netless/tinyproxy.log`: session markers, allowed CONNECTs, refusals. First file to read when the agent starts mentioning something about internal documents of Austrian government.
+- The proxy keeps receipts in `~/.omp/docker/netless/tinyproxy.log`: session markers, allowed CONNECTs, refusals. First file to read when the agent starts mentioning something about internal documents of Australian government.
 
 </details>
 

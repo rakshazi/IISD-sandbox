@@ -9,8 +9,7 @@ and I need things like executables in `/tmp` for example. Feel free to adapt it 
 By default sandbox is configured to run [Oh My Pi](https://omp.sh) agent.
 You can change that, see [Optional](#optional) section.
 
-Also, I wrote [You Don't Need A %Frontier LLM%](https://rakshazi.me/blog/you-dont-need-frontier-llm/) where the setup and purposes were explained.
-(Just in case you might be interested in my ranting for some reason.)
+Explanation with the details: [rakshazi.me/blog/it-is-so-dangerous-sandbox/](https://rakshazi.me/blog/it-is-so-dangerous-sandbox/).
 
 <!-- vim-markdown-toc GFM -->
 

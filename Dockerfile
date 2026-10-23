@@ -39,9 +39,7 @@ RUN echo "Installing system packages..." && \
 	echo "Cleaning up..." && \
 	dnf clean all -q && \
 	echo "[agent] Installing oh-my-pi..." && \
-	export RELEASE_JSON=$(curl -fsSL --connect-timeout 10 --max-time 60 "https://api.github.com/repos/can1357/oh-my-pi/releases/latest") && \
-  export LATEST=$(echo "$RELEASE_JSON" | grep '"tag_name"' | sed -E 's/.*"tag_name"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/') && \
-	export BINARY_URL="https://github.com/can1357/oh-my-pi/releases/download/${LATEST}/omp-linux-x64" && \
+	export BINARY_URL="https://github.com/can1357/oh-my-pi/releases/latest/download/omp-linux-x64" && \
 	curl -fsSL --connect-timeout 10 "$BINARY_URL" -o "${HOME}/.local/bin/omp" && \
 	chmod +x "${HOME}/.local/bin/omp" && \
 	echo "[qt6] Installing mise (tool version manager for prek)..." && \

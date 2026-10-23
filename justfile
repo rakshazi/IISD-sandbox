@@ -181,8 +181,8 @@ __docker network="host" proxy_port="" local_port="" *args:
     	--read-only
     	--security-opt=no-new-privileges:true
     	--cap-drop=ALL
-    	--memory=8g
-    	--memory-swap=8g
+    	--memory=16g
+    	--memory-swap=16g
     	--cpus=8
     	--pids-limit=1024
     	--user="{{ uid }}:{{ gid }}"

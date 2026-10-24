@@ -50,6 +50,14 @@ So, my main threat model is an agent going "oops, I accidentally nuked your syst
 Uncensored models *can* do anything. Depending on the prompt and model quality, it probably *will* do weird things.
 Disable the networking. Don't try to claim a place in a felony bench ladder with your Qwen-Fable-ULTRA-MEGA-NEO-HACKER-HERETIC-8b. (Yes, it will be hilarious. No, it's not worth it anyway.)
 
+Of course, I get you that something is itching deep in side to *try*.
+Don't you worry, the sandbox comes with a set of standard tools for you to play with:
+`gosec`, `staticcheck`, `gitleaks`, `semgrep`, `hadolint`, `shellcheck`, `actionlint`, `ripgrep`, and `bubblewrap`.
+What? Did you expect something like `hack-pentagon.sh`? Hold your horses, and start with security scanners first!
+
+Btw, `trivy`, `grype`, and `govulncheck` need local databases, and they are not baked into the image (~5GB),
+so `just update-dbs` before starting will dump them locally.
+
 ### Optional
 
 1. adapt [Dockerfile](Dockerfile) to your needs
@@ -124,4 +132,7 @@ just run update
 
 # OR do build separately from run
 just build
+
+# Also, for local vuln dbs:
+just update-dbs
 ```

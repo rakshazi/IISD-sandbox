@@ -9,6 +9,52 @@ agent := "omp"
 build *args:
     docker build -t {{ agent }} {{ args }} .
 
+# download/update the security vulnerability databases in ~/.{{ agent }}/cache
+[no-cd]
+update-dbs:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    if ! docker image inspect "{{ agent }}" >/dev/null 2>&1; then
+    	echo "[update-dbs] image '{{ agent }}' missing, building..."
+    	(cd "$(dirname "{{ justfile() }}")" && {{ just_executable() }} -f "{{ justfile() }}" build)
+    fi
+
+    mkdir -p "{{ home }}/.{{ agent }}/cache/trivy" \
+    	"{{ home }}/.{{ agent }}/cache/grype" \
+    	"{{ home }}/.{{ agent }}/cache/govulndb" \
+    	"{{ home }}/.{{ agent }}/cache/semgrep"
+
+    run() {
+    	docker run -it --rm --network=host \
+    		--user "{{ uid }}:{{ gid }}" \
+    		--mount "type=bind,src={{ home }}/.{{ agent }},dst=/home/agent/.{{ agent }}" \
+    		"$@"
+    }
+
+    echo "[update-dbs] trivy..."
+    run --env TRIVY_SKIP_DB_UPDATE=false --entrypoint trivy "{{ agent }}" image --download-db-only
+
+    echo "[update-dbs] grype..."
+    run --entrypoint grype "{{ agent }}" db update
+
+    echo "[update-dbs] govulndb..."
+    run --entrypoint sh "{{ agent }}" -c '
+    	set -eu
+    	tmp=/home/agent/.{{ agent }}/cache/govulndb.new
+    	rm -rf "$tmp" /tmp/vulndb.zip
+    	mkdir -p "$tmp"
+    	curl -fsSL https://vuln.go.dev/vulndb.zip -o /tmp/vulndb.zip
+    	unzip -q /tmp/vulndb.zip -d "$tmp"
+    	rm -rf /home/agent/.{{ agent }}/cache/govulndb
+    	mv "$tmp" /home/agent/.{{ agent }}/cache/govulndb
+    	rm /tmp/vulndb.zip
+    '
+
+    du -sh "{{ home }}/.{{ agent }}/cache/trivy" \
+    	"{{ home }}/.{{ agent }}/cache/grype" \
+    	"{{ home }}/.{{ agent }}/cache/govulndb"
+
 # run agent in docker sandbox
 [no-cd]
 run *args:
@@ -19,6 +65,7 @@ run *args:
     if [ "${1:-}" = update ]; then
     	echo "[{{ agent }} sandbox] updating..."
     	{{ just_executable() }} -f {{ justfile() }} build --pull --no-cache
+    	{{ just_executable() }} -f {{ justfile() }} update-dbs
     	echo "[{{ agent }} sandbox] ready to run"
     	# re-run without args
     	exec {{ just_executable() }} -f {{ justfile() }} run
@@ -32,6 +79,7 @@ run *args:
     if ! docker image inspect {{ agent }} &> /dev/null; then
     	echo "[{{ agent }} sandbox] building..."
     	{{ just_executable() }} -f {{ justfile() }} build
+    	{{ just_executable() }} -f {{ justfile() }} update-dbs
     	echo "[{{ agent }} sandbox] ready to run"
     	exec {{ just_executable() }} -f {{ justfile() }} run "$@"
     fi
@@ -65,6 +113,7 @@ netless *args:
     if ! docker image inspect "{{ agent }}" >/dev/null 2>&1; then
     	echo "[netless] image '{{ agent }}' missing, building..."
     	{{ just_executable() }} -f {{ justfile() }} build
+    	{{ just_executable() }} -f {{ justfile() }} update-dbs
     fi
 
     mkdir -p "$RUN_DIR"

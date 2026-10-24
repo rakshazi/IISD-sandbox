@@ -18,8 +18,11 @@ ARG DNF_DEPS_RUST="rustup clang cmake ninja gcc-c++ pkgconf sqlite-devel"
 ARG DNF_DEPS_QT6="qt6-qtbase-devel qt6-qtbase-private-devel \
 	qt6-qtdeclarative-devel qt6-qtmultimedia-devel qt6-qtsvg-devel qt6-qttools-devel \
 	libsecret-devel"
+# security deps: scanners, secret detection, structural search, sandbox.
+# trivy, grype, and govulncheck need a local vulnerability database for offline runs.
+ARG DNF_DEPS_SECURITY="gosec staticcheck govulncheck gitleaks trivy grype hadolint ShellCheck ripgrep bubblewrap"
 # all deps to install. If you don't need something, just remove it from the list
-ENV DNF_DEPS="$DNF_DEPS_SYSTEM $DNF_DEPS_AGENT $DNF_DEPS_GO $DNF_DEPS_ANSIBLE $DNF_DEPS_NODE $DNF_DEPS_RUST $DNF_DEPS_QT6"
+ENV DNF_DEPS="$DNF_DEPS_SYSTEM $DNF_DEPS_AGENT $DNF_DEPS_GO $DNF_DEPS_ANSIBLE $DNF_DEPS_NODE $DNF_DEPS_RUST $DNF_DEPS_QT6 $DNF_DEPS_SECURITY"
 
 ENV HOME=/home/agent
 ENV GOPATH=$HOME/go
@@ -27,6 +30,18 @@ ENV CARGO_HOME=$HOME/.cargo
 ENV RUSTUP_HOME=$HOME/.rustup
 ENV GOCACHE=/tmp
 ENV PATH=$CARGO_HOME/bin:$GOPATH/bin:$HOME/.local/bin:$PATH
+
+# Security databases live on the host mount ~/.omp/cache, not in the image.
+# Refresh them with the commands in README.md while the sandbox has network access.
+ENV TRIVY_CACHE_DIR=/home/agent/.omp/cache/trivy
+ENV GRYPE_DB_CACHE_DIR=/home/agent/.omp/cache/grype
+ENV GOVULNDB=/home/agent/.omp/cache/govulndb
+ENV TRIVY_SKIP_DB_UPDATE=true
+ENV TRIVY_SKIP_JAVA_DB_UPDATE=true
+ENV GRYPE_DB_AUTO_UPDATE=false
+ENV GRYPE_DB_VALIDATE_AGE=false
+ENV SEMGREP_SETTINGS_FILE=/home/agent/.omp/cache/semgrep/settings.yml
+ENV SEMGREP_LOG_FILE=/home/agent/.omp/logs/semgrep.log
 
 RUN groupadd -g 10001 agent && \
 	useradd -u 10001 -g agent -s /bin/bash -M -d $HOME agent && \
@@ -48,8 +63,18 @@ RUN echo "Installing system packages..." && \
 	go install github.com/vektra/mockery/v3@latest && \
 	echo "[go] Installing swag..." && \
 	go install github.com/swaggo/swag/cmd/swag@latest && \
+	echo "[security] Installing semgrep..." && \
+	mkdir -p $HOME/.local/venvs && \
+	python3 -m venv $HOME/.local/venvs/semgrep && \
+	$HOME/.local/venvs/semgrep/bin/pip install --no-cache-dir semgrep==1.182.1 && \
+	ln -s $HOME/.local/venvs/semgrep/bin/semgrep $HOME/.local/bin/semgrep && \
+	echo "[security] Installing actionlint..." && \
+	go install github.com/rhysd/actionlint/cmd/actionlint@latest && \
 	mv $GOPATH/bin/swag $HOME/.local/bin/swag && \
 	mv $GOPATH/bin/mockery $HOME/.local/bin/mockery && \
+	mv $GOPATH/bin/actionlint $HOME/.local/bin/actionlint && \
+	printf '%s\n' '#!/bin/sh' 'set -eu' 'if [ ! -d "${GOVULNDB:-}" ]; then' '  echo "Go vulnerability database missing at ${GOVULNDB:-<unset>}; run the README security DB update command." >&2' '  exit 2' 'fi' 'exec /usr/bin/govulncheck -db "file://${GOVULNDB}" "$@"' > $HOME/.local/bin/govulncheck && \
+	chmod +x $HOME/.local/bin/govulncheck && \
 	chown -R agent:agent $HOME
 
 WORKDIR /home/agent/workspace

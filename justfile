@@ -7,7 +7,7 @@ home := `echo $HOME`
 agent := "omp"
 
 build *args:
-    docker build -t {{ agent }} {{ args }} .
+    docker build --build-arg HOST_UID={{ uid }} --build-arg HOST_GID={{ gid }} -t {{ agent }} {{ args }} .
 
 # download/update the security vulnerability databases in ~/.{{ agent }}/cache
 [no-cd]
@@ -27,6 +27,8 @@ update-dbs:
 
     run() {
     	docker run -it --rm --network=host \
+    		--security-opt=no-new-privileges:true \
+    		--cap-drop=ALL \
     		--user "{{ uid }}:{{ gid }}" \
     		--mount "type=bind,src={{ home }}/.{{ agent }},dst=/home/agent/.{{ agent }}" \
     		"$@"

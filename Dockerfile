@@ -1,5 +1,8 @@
 FROM fedora:latest
 
+ARG HOST_UID=1000
+ARG HOST_GID=1000
+
 # arbitrary system deps
 ARG DNF_DEPS_SYSTEM="unzip jq git just hugo reuse socat"
 # agent (omp by default) deps (like chrome deps)
@@ -18,9 +21,8 @@ ARG DNF_DEPS_RUST="rustup clang cmake ninja gcc-c++ pkgconf sqlite-devel"
 ARG DNF_DEPS_QT6="qt6-qtbase-devel qt6-qtbase-private-devel \
 	qt6-qtdeclarative-devel qt6-qtmultimedia-devel qt6-qtsvg-devel qt6-qttools-devel \
 	libsecret-devel"
-# security deps: scanners, secret detection, structural search, sandbox.
-# trivy, grype, and govulncheck need a local vulnerability database for offline runs.
-ARG DNF_DEPS_SECURITY="gosec staticcheck govulncheck gitleaks trivy grype hadolint ShellCheck ripgrep bubblewrap"
+# security deps: scanners, secret detection, structural search, etc.
+ARG DNF_DEPS_SECURITY="gosec staticcheck govulncheck gitleaks trivy grype hadolint ShellCheck ripgrep bubblewrap openssl openssh-clients openssh-server"
 # all deps to install. If you don't need something, just remove it from the list
 ENV DNF_DEPS="$DNF_DEPS_SYSTEM $DNF_DEPS_AGENT $DNF_DEPS_GO $DNF_DEPS_ANSIBLE $DNF_DEPS_NODE $DNF_DEPS_RUST $DNF_DEPS_QT6 $DNF_DEPS_SECURITY"
 
@@ -43,8 +45,9 @@ ENV GRYPE_DB_VALIDATE_AGE=false
 ENV SEMGREP_SETTINGS_FILE=/home/agent/.omp/cache/semgrep/settings.yml
 ENV SEMGREP_LOG_FILE=/home/agent/.omp/logs/semgrep.log
 
-RUN groupadd -g 10001 agent && \
-	useradd -u 10001 -g agent -s /bin/bash -M -d $HOME agent && \
+RUN (getent group "${HOST_GID}" >/dev/null || groupadd -g "${HOST_GID}" agent) && \
+	(getent passwd "${HOST_UID}" >/dev/null || useradd -u "${HOST_UID}" -g "${HOST_GID}" -s /bin/bash -M -d "$HOME" agent) && \
+	getent passwd "${HOST_UID}" >/dev/null && \
 	mkdir -p $HOME/workspace && \
 	mkdir -p $HOME/.local/bin && \
 	mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 777 "$GOPATH"
@@ -75,7 +78,7 @@ RUN echo "Installing system packages..." && \
 	mv $GOPATH/bin/actionlint $HOME/.local/bin/actionlint && \
 	printf '%s\n' '#!/bin/sh' 'set -eu' 'if [ ! -d "${GOVULNDB:-}" ]; then' '  echo "Go vulnerability database missing at ${GOVULNDB:-<unset>}; run the README security DB update command." >&2' '  exit 2' 'fi' 'exec /usr/bin/govulncheck -db "file://${GOVULNDB}" "$@"' > $HOME/.local/bin/govulncheck && \
 	chmod +x $HOME/.local/bin/govulncheck && \
-	chown -R agent:agent $HOME
+	chown -R "${HOST_UID}:${HOST_GID}" $HOME
 
 WORKDIR /home/agent/workspace
-USER agent
+USER ${HOST_UID}:${HOST_GID}

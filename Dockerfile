@@ -4,7 +4,7 @@ ARG HOST_UID=1000
 ARG HOST_GID=1000
 
 # arbitrary system deps
-ARG DNF_DEPS_SYSTEM="unzip jq git just hugo reuse socat"
+ARG DNF_DEPS_SYSTEM="unzip jq git just hugo reuse socat procps-ng"
 # agent (omp by default) deps (like chrome deps)
 ARG DNF_DEPS_AGENT="nss nss-util nspr atk at-spi2-atk at-spi2-core cairo cups-libs dbus-libs \
 	libX11 libXcomposite libXdamage libXext libXfixes libXrandr libxcb libxkbcommon \

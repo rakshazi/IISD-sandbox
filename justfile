@@ -230,6 +230,7 @@ __docker network="host" proxy_port="" local_port="" *args:
     	--tmpfs="/home/agent/go:rw,exec,nosuid,nodev,uid={{ uid }},gid={{ gid }},size=2g"
     	--ipc=private
     	--read-only
+    	--init
     	--security-opt=no-new-privileges:true
     	--cap-drop=ALL
     	--memory=16g
@@ -240,7 +241,7 @@ __docker network="host" proxy_port="" local_port="" *args:
     	--mount "type=bind,src={{ home }}/.{{ agent }},dst=/home/agent/.{{ agent }}"
     	--mount "type=bind,src=$CWD,dst=/home/agent/workspace/$WSD"
     	--workdir "/home/agent/workspace/$WSD"
-    	--health-cmd="ps aux | grep -q {{ agent }} || exit 1"
+    	--health-cmd="pgrep -x {{ agent }} >/dev/null"
     	--health-interval=30s
     	--network="{{ network }}"
     )
